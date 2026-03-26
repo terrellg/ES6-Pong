@@ -80,7 +80,13 @@ class Pong{
         this._context.fillRect(0,0, this._canvas.width, this._canvas.height);
 
         this.drawRect(this.ball);
-        this.players.forEach(player => this.drawRect(player));                      
+        this.players.forEach(player => this.drawRect(player));
+
+        this._context.fillStyle = '#fff';
+        this._context.font = '32px monospace';
+        this._context.textAlign = 'center';
+        this._context.fillText(this.players[0].score, this._canvas.width / 4,     50);
+        this._context.fillText(this.players[1].score, this._canvas.width * 3 / 4, 50);
     }
 
     drawRect(rect){
@@ -89,17 +95,41 @@ class Pong{
                                 rect.size.x, rect.size.y);
     }
     
+    resetBall(){
+        this.ball.pos.x = this._canvas.width / 2;
+        this.ball.pos.y = this._canvas.height / 2;
+        this.ball.vel.x *= -1;
+    }
+
+    collide(player, ball){
+        if (ball.right > player.left && ball.left < player.right &&
+            ball.bottom > player.top && ball.top < player.bottom){
+            ball.vel.x *= -1;
+            // nudge ball outside the paddle so it doesn't stick
+            if (ball.vel.x > 0){
+                ball.pos.x = player.right + ball.size.x / 2;
+            } else {
+                ball.pos.x = player.left - ball.size.x / 2;
+            }
+        }
+    }
+
     update(time){
         this.ball.pos.x += this.ball.vel.x * time;
         this.ball.pos.y += this.ball.vel.y * time;
-    
-        if  (this.ball.left < 0 || this.ball.right > this._canvas.width){
-            this.ball.vel.x= (-1 * this.ball.vel.x);
-    
+
+        if (this.ball.left < 0){
+            this.players[1].score++;
+            this.resetBall();
+        } else if (this.ball.right > this._canvas.width){
+            this.players[0].score++;
+            this.resetBall();
         }
         if(this.ball.top < 0 || this.ball.bottom > this._canvas.height){
             this.ball.vel.y= (-1 * this.ball.vel.y);
         }
+
+        this.players.forEach(player => this.collide(player, this.ball));
         //set lower limit for p1
         if(pong.players[0].pos.y >= canvas.height-50){
             pong.players[0].pos.y = canvas.height-50;
